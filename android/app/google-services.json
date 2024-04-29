@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "389879203145",
+    "project_id": "quantum-654c6",
+    "storage_bucket": "quantum-654c6.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:389879203145:android:1d01cca12bd97ed0d40698",
+        "android_client_info": {
+          "package_name": "com.example.quantumaware"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhsQq8pldi8oQVvpRXeADof5Y2p8hKDAI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
