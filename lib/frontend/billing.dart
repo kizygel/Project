@@ -144,7 +144,7 @@ class _BillingPageState extends State<BillingPage> {
                                                     MainAxisAlignment.end,
                                                 children: [
                                                   Text('Overall Total kWh'),
-                                                  Text('${totalKWh}')
+                                                  Text('${totalKWh.length}')
                                                 ],
                                               );
                                             }

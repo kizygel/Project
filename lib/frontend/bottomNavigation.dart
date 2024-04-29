@@ -258,7 +258,11 @@ class _BottomNavigationBarExampleState
                                   ),
                                 ),
                                 onPressed: () {
-                                  addAppliance();
+                                  addAppliance(
+                                      type: typeController.text,
+                                      brand: brandController.text,
+                                      watts:
+                                          double.parse(wattsController.text));
                                 },
                                 child: Text(
                                   'ADD',
@@ -289,42 +293,46 @@ class _BottomNavigationBarExampleState
         });
   }
 
-  void addAppliance() async {
-    FirebaseFirestore firestore = FirebaseFirestore.instance;
+  Future<void> addAppliance({
+    required String type,
+    required String brand,
+    required double watts,
+  }) async {
+    try {
+      final json = {
+        'type': type,
+        'brand': brand,
+        'watts': watts,
+      };
+      await FirebaseFirestore.instance.collection('Appliances').doc().set(json);
+      // Clear the text fields after adding the data
+      typeController.clear();
+      brandController.clear();
+      wattsController.clear();
 
-    // Add data to the "Appliances" collection
-    await firestore.collection('Appliances').add({
-      'type': typeController.text,
-      'brand': brandController.text,
-      'watts': wattsController.text,
-      // Add more fields as needed
-    });
-
-    // Clear the text fields after adding the data
-    typeController.clear();
-    brandController.clear();
-    wattsController.clear();
-
-    // Close the dialog
-    Navigator.of(context).pop();
-    // Show success dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Success'),
-          content: Text('Appliance added successfully'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
+      // Close the dialog
+      Navigator.of(context).pop();
+      // Show success dialog
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Success'),
+            content: Text('Appliance added successfully'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      print('Error adding appliances data: $e');
+    }
   }
 
   BoxDecoration boxDecoration() {

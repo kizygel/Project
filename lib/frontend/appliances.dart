@@ -474,6 +474,7 @@ class _AppliancesPageState extends State<AppliancesPage> {
                                     'offTime': offTimeController.text,
                                     'id': userId.toString(),
                                     'addedBy': _userName,
+                                    'watts': double.parse(wattsController.text),
 
                                     // Add more fields as needed
                                   });
