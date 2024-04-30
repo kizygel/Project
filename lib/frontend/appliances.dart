@@ -262,8 +262,8 @@ class _AppliancesPageState extends State<AppliancesPage> {
                                         return Container(
                                           width: double.infinity,
                                           margin:
-                                              EdgeInsets.fromLTRB(8, 0, 8, 0),
-                                          padding: EdgeInsets.only(left: 8),
+                                              EdgeInsets.fromLTRB(2, 0, 2, 0),
+                                          padding: EdgeInsets.only(left: 2),
                                           decoration: BoxDecoration(
                                             color: Colors.white,
                                           ),
