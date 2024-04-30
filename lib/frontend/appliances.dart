@@ -75,7 +75,7 @@ class _AppliancesPageState extends State<AppliancesPage> {
 
                                   String userId = data.id;
                                   return Container(
-                                    height: 90,
+                                    height: 80,
                                     width: double.infinity,
                                     margin: EdgeInsets.fromLTRB(8, 2, 8, 0),
                                     padding: EdgeInsets.all(8),
@@ -151,7 +151,7 @@ class _AppliancesPageState extends State<AppliancesPage> {
                                                   padding:
                                                       const EdgeInsets.all(3.0),
                                                   minimumSize:
-                                                      const Size(100, 40),
+                                                      const Size(80, 40),
                                                   maximumSize:
                                                       const Size(100, 40),
                                                   shape: RoundedRectangleBorder(
@@ -244,6 +244,19 @@ class _AppliancesPageState extends State<AppliancesPage> {
                                             data.data() as Map<String, dynamic>;
 
                                         String userId = data.id;
+                                        Timestamp timestamp =
+                                            appliancesData['onTime'];
+                                        DateTime dateTime = timestamp.toDate();
+                                        String formattedDate =
+                                            DateFormat('yyyy-MM-dd')
+                                                .format(dateTime);
+
+                                        Timestamp timestamp2 =
+                                            appliancesData['offTime'];
+                                        DateTime dateTime2 = timestamp.toDate();
+                                        String formattedDate2 =
+                                            DateFormat('yyyy-MM-dd')
+                                                .format(dateTime);
                                         return Container(
                                           width: double.infinity,
                                           margin:
@@ -263,18 +276,18 @@ class _AppliancesPageState extends State<AppliancesPage> {
                                                       CrossAxisAlignment.start,
                                                   children: [
                                                     Text(
-                                                      'ON - ${appliancesData['onTime']} ${appliancesData['addedBy']}',
+                                                      'ON - ${formattedDate} ${appliancesData['addedBy']}',
                                                       style: TextStyle(
                                                           fontWeight:
                                                               FontWeight.bold,
-                                                          fontSize: 10),
+                                                          fontSize: 12),
                                                     ),
                                                     Text(
-                                                      'OFF - ${appliancesData['offTime']} ${appliancesData['addedBy']}',
+                                                      'OFF - ${formattedDate2} ${appliancesData['addedBy']}',
                                                       style: TextStyle(
                                                           fontWeight:
                                                               FontWeight.bold,
-                                                          fontSize: 10),
+                                                          fontSize: 12),
                                                     ),
                                                   ]),
                                             ],
@@ -465,44 +478,24 @@ class _AppliancesPageState extends State<AppliancesPage> {
                                   ),
                                 ),
                                 onPressed: () async {
-                                  FirebaseFirestore firestore =
-                                      FirebaseFirestore.instance;
+                                  // Get the current date and time
+                                  DateTime now = DateTime.now();
+                                  // Set onTime and offTime (assuming you have these values)
+                                  DateTime onTime = DateTime.parse(onTimeController
+                                      .text); // Set your onTime DateTime value here
+                                  DateTime offTime = DateTime.parse(
+                                      offTimeController
+                                          .text); // Set your offTime DateTime value here
 
-                                  // Add data to the "Appliances" collection
-                                  await firestore.collection('Activity').add({
-                                    'onTime': onTimeController.text,
-                                    'offTime': offTimeController.text,
-                                    'id': userId.toString(),
-                                    'addedBy': _userName,
-                                    'watts': double.parse(wattsController.text),
-
-                                    // Add more fields as needed
-                                  });
-
-                                  // Clear the text fields after adding the data
-                                  onTimeController.clear();
-                                  offTimeController.clear();
-
-                                  // Close the dialog
-                                  Navigator.of(context).pop();
-                                  // Show success dialog
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        title: Text('Success'),
-                                        content:
-                                            Text('Activity added successfully'),
-                                        actions: <Widget>[
-                                          TextButton(
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                            },
-                                            child: Text('OK'),
-                                          ),
-                                        ],
-                                      );
-                                    },
+                                  // Call addAppliance method
+                                  await addAppliance(
+                                    addedBy: _userName,
+                                    id: userId,
+                                    watts: double.parse(wattsController.text),
+                                    onTime: onTime,
+                                    offTime: offTime,
+                                    type: typeController.text,
+                                    brand: brandController.text,
                                   );
                                 },
                                 child: Text(
@@ -532,6 +525,57 @@ class _AppliancesPageState extends State<AppliancesPage> {
                 )),
           );
         });
+  }
+
+  Future<void> addAppliance({
+    required String addedBy,
+    required String id,
+    required double watts,
+    required DateTime onTime,
+    required DateTime offTime,
+    required String type,
+    required String brand,
+  }) async {
+    try {
+      // Convert DateTime objects to Timestamp
+      Timestamp onTimeTimestamp = Timestamp.fromDate(onTime);
+      Timestamp offTimeTimestamp = Timestamp.fromDate(offTime);
+
+      final json = {
+        'type': type,
+        'id': id,
+        'watts': watts,
+        'onTime': onTimeTimestamp,
+        'offTime': offTimeTimestamp,
+        'addedBy': addedBy,
+        'brand': brand,
+      };
+      await FirebaseFirestore.instance.collection('Activity').doc().set(json);
+      // Clear the text fields after adding the data
+
+      // Close the dialog
+      Navigator.of(context).pop();
+      // Show success dialog
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Success'),
+            content: Text('Appliance added successfully'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      print('Error adding appliances data: $e');
+    }
   }
 
   BoxDecoration boxDecoration() {

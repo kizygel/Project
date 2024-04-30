@@ -43,7 +43,7 @@ class _SignUpState extends State<SignUp> {
   Widget build(BuildContext context) {
     return Scaffold(
         body: Container(
-      decoration: BoxDecoration(color: Colors.amber[900]),
+      decoration: BoxDecoration(color: Color.fromARGB(255, 238, 107, 6)),
       child: Center(
         child: Expanded(
           child: Container(
@@ -52,6 +52,13 @@ class _SignUpState extends State<SignUp> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Center(
+                  child: Image(
+                    image: AssetImage('assets/images/logo.jpg'),
+                    width: 180,
+                    height: 180,
+                  ),
+                ),
                 Center(
                   child: Text(
                     'QuantomAware',
@@ -67,7 +74,6 @@ class _SignUpState extends State<SignUp> {
                   'Name',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                height(),
                 Container(
                   padding: const EdgeInsets.only(left: 15),
                   height: 50,
@@ -90,7 +96,6 @@ class _SignUpState extends State<SignUp> {
                   'Username',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                height(),
                 Container(
                   padding: const EdgeInsets.only(left: 15),
                   height: 50,
@@ -113,7 +118,6 @@ class _SignUpState extends State<SignUp> {
                   'Email',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                height(),
                 Container(
                   padding: const EdgeInsets.only(left: 15),
                   height: 50,
@@ -131,11 +135,11 @@ class _SignUpState extends State<SignUp> {
                                 : Colors.black)),
                   ),
                 ),
+                height(),
                 Text(
                   'Password',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                height(),
                 Container(
                   padding: const EdgeInsets.only(left: 15),
                   height: 50,
@@ -162,7 +166,7 @@ class _SignUpState extends State<SignUp> {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(255, 55, 17, 101),
-                    padding: const EdgeInsets.all(18.0),
+                    padding: const EdgeInsets.all(5.0),
                     minimumSize: const Size(350, 50),
                     maximumSize: const Size(350, 50),
                     shape: RoundedRectangleBorder(
@@ -183,7 +187,7 @@ class _SignUpState extends State<SignUp> {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    padding: const EdgeInsets.all(18.0),
+                    padding: const EdgeInsets.all(5.0),
                     minimumSize: const Size(350, 50),
                     maximumSize: const Size(350, 50),
                     shape: RoundedRectangleBorder(
@@ -198,6 +202,11 @@ class _SignUpState extends State<SignUp> {
                     ),
                   ),
                 ),
+                if (error.isNotEmpty) // Only show the error if it's not empty
+                  Text(
+                    error,
+                    style: TextStyle(color: Colors.red),
+                  ),
               ],
             ),
           ),
@@ -213,6 +222,30 @@ class _SignUpState extends State<SignUp> {
   }
 
   void registerUser() async {
+    if (nameController.text.isEmpty ||
+        usernameController.text.isEmpty ||
+        emailController.text.isEmpty ||
+        passwordController.text.isEmpty) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Error"),
+            content: Text("Please fill in all fields."),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text("OK"),
+              ),
+            ],
+          );
+        },
+      );
+      return; // Exit the method if any field is empty
+    }
+
     showDialog(
       context: context,
       useRootNavigator: false,

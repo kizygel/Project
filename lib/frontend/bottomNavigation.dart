@@ -95,20 +95,40 @@ class _BottomNavigationBarExampleState
                           color: Colors.white,
                         )),
                     IconButton(
-                        onPressed: () {
-                          FirebaseAuth.instance.signOut(); // Sign out the user
+                      onPressed: () async {
+                        bool confirmSignOut = await showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text('Confirm Sign Out'),
+                            content: Text('Are you sure you want to sign out?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: Text('Sign Out'),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (confirmSignOut ?? false) {
+                          await FirebaseAuth.instance
+                              .signOut(); // Sign out the user
                           Navigator.of(context).pushAndRemoveUntil(
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    Login()), // Navigate back to the login page
+                            MaterialPageRoute(builder: (context) => Login()),
                             (route) =>
-                                true, // Remove all existing routes from the navigation stack
+                                false, // Remove all existing routes from the navigation stack
                           );
-                        },
-                        icon: Icon(
-                          Icons.exit_to_app,
-                          color: Colors.white,
-                        )),
+                        }
+                      },
+                      icon: Icon(
+                        Icons.exit_to_app,
+                        color: Colors.white,
+                      ),
+                    )
                   ],
                 ),
               )
@@ -248,15 +268,7 @@ class _BottomNavigationBarExampleState
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue,
-                                  padding: const EdgeInsets.all(3.0),
-                                  minimumSize: const Size(100, 40),
-                                  maximumSize: const Size(100, 40),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
+                                style: style(Colors.blue),
                                 onPressed: () {
                                   addAppliance(
                                       type: typeController.text,
@@ -269,15 +281,7 @@ class _BottomNavigationBarExampleState
                                   style: TextStyle(color: Colors.white),
                                 )),
                             ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                  padding: const EdgeInsets.all(3.0),
-                                  minimumSize: const Size(100, 40),
-                                  maximumSize: const Size(100, 40),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
+                                style: style(Colors.red),
                                 onPressed: () {},
                                 child: Text(
                                   'CLOSE',
@@ -291,6 +295,18 @@ class _BottomNavigationBarExampleState
                 )),
           );
         });
+  }
+
+  ButtonStyle style(Color color) {
+    return ElevatedButton.styleFrom(
+      backgroundColor: color,
+      padding: const EdgeInsets.all(3.0),
+      minimumSize: const Size(100, 40),
+      maximumSize: const Size(100, 40),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+    );
   }
 
   Future<void> addAppliance({

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:quantumaware/frontend/bottomNavigation.dart';
@@ -35,7 +36,7 @@ class _LoginState extends State<Login> {
   Widget build(BuildContext context) {
     return Scaffold(
         body: Container(
-      decoration: BoxDecoration(color: Colors.amber[900]),
+      decoration: BoxDecoration(color: Color.fromARGB(255, 238, 107, 6)),
       child: Center(
         child: Expanded(
           child: Container(
@@ -44,6 +45,13 @@ class _LoginState extends State<Login> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Center(
+                  child: Image(
+                    image: AssetImage('assets/images/logo.jpg'),
+                    width: 180,
+                    height: 180,
+                  ),
+                ),
                 Center(
                   child: Text(
                     'QuantomAware',
@@ -56,10 +64,9 @@ class _LoginState extends State<Login> {
                 ),
                 height(),
                 Text(
-                  'Username',
+                  'Email',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                height(),
                 Container(
                   padding: const EdgeInsets.only(left: 15),
                   height: 50,
@@ -70,7 +77,7 @@ class _LoginState extends State<Login> {
                     controller: usernameController,
                     decoration: InputDecoration(
                         border: InputBorder.none,
-                        hintText: 'Enter username',
+                        hintText: 'Enter email',
                         labelStyle: TextStyle(
                             color: myFocusNode.hasFocus
                                 ? Colors.blue
@@ -82,7 +89,6 @@ class _LoginState extends State<Login> {
                   'Password',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                height(),
                 Container(
                   padding: const EdgeInsets.only(left: 15),
                   height: 50,
@@ -105,7 +111,7 @@ class _LoginState extends State<Login> {
                 height(),
                 ElevatedButton(
                   onPressed: () {
-                    signIn();
+                    login(context);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(255, 55, 17, 101),
@@ -148,6 +154,14 @@ class _LoginState extends State<Login> {
                     ),
                   ),
                 ),
+                height(),
+                Center(
+                  child: Text(
+                    error,
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                )
               ],
             ),
           ),
@@ -162,30 +176,51 @@ class _LoginState extends State<Login> {
     );
   }
 
-  Future signIn() async {
-    showDialog(
-      context: context,
-      useRootNavigator: false,
-      barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
-
+  login(BuildContext context) async {
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: usernameController.text.trim(),
-        password: passwordController.text.trim(),
-      );
-      setState(() {
-        error = "";
-      });
+      String email = usernameController.text; // Fetch email from Firestore
+      String password =
+          passwordController.text; // Get password from the user input
+
+      // Sign in the user with fetched email and the provided password
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: password);
+
+      // Get the user from the userCredential
+      User? user = userCredential.user;
+
+      if (user != null) {
+        setState(() {
+          error = ""; // Clear the error message on successful login
+        });
+        // Navigate to the PovDashboard with only the userID
+        Navigator.of(context).pushReplacement(MaterialPageRoute(
+          builder: (context) => BottomNavigationBarExample(),
+        ));
+      }
     } on FirebaseAuthException catch (e) {
-      print(e);
       setState(() {
-        error = e.message.toString();
+        switch (e.code) {
+          case 'user-not-found':
+            error = "No user found with that email.";
+            break;
+          case 'wrong-password':
+            error = "Wrong password provided for that user.";
+            break;
+          case 'invalid-email':
+            error = "Invalid email provided.";
+            break;
+          case 'user-disabled':
+            error = "User account has been disabled.";
+            break;
+          default:
+            error = "An error occurred: ${e.message}";
+        }
+      });
+    } catch (e) {
+      setState(() {
+        error = "An error occurred: $e";
       });
     }
-    Navigator.pop(context);
   }
 }

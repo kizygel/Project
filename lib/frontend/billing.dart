@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class BillingPage extends StatefulWidget {
-  const BillingPage({super.key});
+  const BillingPage({Key? key});
 
   @override
   State<BillingPage> createState() => _BillingPageState();
@@ -11,14 +12,10 @@ class BillingPage extends StatefulWidget {
 class _BillingPageState extends State<BillingPage> {
   List<double> totalKWh = [];
   double total = 0.0;
-
-  void initState() {
-    super.initState();
-  }
-
-  void dispose() {
-    super.dispose();
-  }
+  DateTimeRange? dateRange;
+  DateTime startDate = DateTime.now();
+  DateTime endDate = DateTime.now();
+  double overallTotalPerKwh = 0.0;
 
   @override
   Widget build(BuildContext context) {
@@ -32,9 +29,53 @@ class _BillingPageState extends State<BillingPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            padding: const EdgeInsets.all(3.0),
+                            minimumSize: const Size(150, 40),
+                            maximumSize: const Size(150, 40),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          onPressed: () async {
+                            final initialDateRange = dateRange ??
+                                DateTimeRange(
+                                    start: DateTime.now(), end: DateTime.now());
+                            final newDateRange = await showDateRangePicker(
+                              context: context,
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime(2025),
+                              initialDateRange: initialDateRange,
+                            );
+                            if (newDateRange == null) return;
+                            setState(() {
+                              dateRange = newDateRange;
+                              startDate = dateRange!.start;
+                              endDate = dateRange!.end;
+                            });
+                          },
+                          child: Text(
+                            'Select Date Range',
+                            style: TextStyle(color: Colors.black),
+                          ),
+                        ),
+                      ),
+                      if (dateRange != null)
+                        Text(
+                          '${DateFormat('yyyy-MM-dd').format(dateRange!.start)} - ${DateFormat('yyyy-MM-dd').format(dateRange!.end)}',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                    ],
+                  ),
                   StreamBuilder(
                       stream: FirebaseFirestore.instance
-                          .collection('Appliances')
+                          .collection('Activity')
                           .snapshots(),
                       builder: (BuildContext context,
                           AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -44,13 +85,57 @@ class _BillingPageState extends State<BillingPage> {
                           return Center(child: Text('No data available yet'));
                         } else {
                           List<DocumentSnapshot> dataDocs = snapshot.data!.docs;
-                          // Calculate total kWh
+                          // Filter data by date range if selected
 
-                          // Calculate total kWh
                           List<String> applianceIds =
                               dataDocs.map((doc) => doc.id).toList();
-                          String watts =
-                              ''; // Example watts per hour, replace with actual value
+
+                          List<DocumentSnapshot> filteredDocs =
+                              dataDocs.where((document) {
+                            Map<String, dynamic> data =
+                                document.data() as Map<String, dynamic>;
+
+                            DateTime? timeIn =
+                                (data['onTime'] as Timestamp?)?.toDate();
+
+                            bool isAfterStartDate = dateRange?.start == null ||
+                                (timeIn != null && timeIn.isAfter(startDate!));
+                            bool isBeforeEndDate = endDate == null ||
+                                (timeIn != null &&
+                                    timeIn.isBefore(
+                                        endDate!.add(Duration(days: 1))));
+
+                            return isAfterStartDate && isBeforeEndDate;
+                          }).toList();
+
+                          // Calculate total overtime pay for the current user
+                          double totalOvertimePay = 0;
+                          double hours = 0;
+
+                          for (var appliancesData in filteredDocs) {
+                            hours = calculateTotalHours(
+                                appliancesData['onTime'],
+                                appliancesData['offTime']);
+                            double watts = double.parse(
+                                appliancesData['watts'].toString());
+                            if (appliancesData['watts'] != null) {
+                              totalOvertimePay +=
+                                  ((watts * hours / 1000) * 12.05);
+                            }
+                          }
+                          overallTotalPerKwh =
+                              filteredDocs.fold<double>(0.0, (sum, doc) {
+                            Map<String, dynamic> appliancesData =
+                                doc.data() as Map<String, dynamic>;
+                            double hours = calculateTotalHours(
+                                appliancesData['onTime'],
+                                appliancesData['offTime']);
+                            double watts = double.parse(
+                                appliancesData['watts'].toString());
+                            return sum +
+                                ((watts * hours / 1000) *
+                                    12.05); // Adjust rate as needed
+                          });
 
                           return Align(
                             alignment: Alignment.topLeft,
@@ -61,17 +146,43 @@ class _BillingPageState extends State<BillingPage> {
                                 child: SingleChildScrollView(
                                   scrollDirection: Axis.vertical,
                                   child: Flexible(
-                                      child: Column(
-                                    children: [
-                                      DataTable(
+                                    child: Column(
+                                      children: [
+                                        DataTable(
                                           columns: [
-                                            DataColumn(label: Text('#')),
-                                            DataColumn(label: Text('Type')),
-                                            DataColumn(label: Text('Brand')),
-                                            DataColumn(label: Text('per kWh')),
+                                            DataColumn(
+                                              label: Text(
+                                                '#',
+                                                style: textStyle(),
+                                              ),
+                                            ),
+                                            DataColumn(
+                                              label: Text(
+                                                'Type',
+                                                style: textStyle(),
+                                              ),
+                                            ),
+                                            DataColumn(
+                                              label: Text(
+                                                'Brand',
+                                                style: textStyle(),
+                                              ),
+                                            ),
+                                            DataColumn(
+                                              label: Text(
+                                                'watts',
+                                                style: textStyle(),
+                                              ),
+                                            ),
+                                            DataColumn(
+                                              label: Text(
+                                                'per kWh',
+                                                style: textStyle(),
+                                              ),
+                                            ),
                                           ],
                                           rows: List.generate(
-                                            dataDocs.length,
+                                            filteredDocs.length,
                                             (index) {
                                               DocumentSnapshot data =
                                                   dataDocs[index];
@@ -79,80 +190,75 @@ class _BillingPageState extends State<BillingPage> {
                                                   appliancesData = data.data()
                                                       as Map<String, dynamic>;
                                               String userId = data.id;
-                                              watts = appliancesData['watts']
-                                                  .toString();
+                                              String watts =
+                                                  appliancesData['watts']
+                                                      .toString();
+
+                                              double hours =
+                                                  calculateTotalHours(
+                                                      appliancesData['onTime'],
+                                                      appliancesData[
+                                                          'offTime']);
+
+                                              double perKwh =
+                                                  ((double.parse(watts) *
+                                                          hours /
+                                                          1000) *
+                                                      12.05);
 
                                               return DataRow(cells: [
-                                                DataCell(Text('${index + 1}')),
                                                 DataCell(Text(
-                                                    '${appliancesData['type']}')),
-                                                DataCell(Text(
-                                                    '${appliancesData['brand']}')),
-                                                DataCell(
-                                                  FutureBuilder<String>(
-                                                    future: getTotalWatts(
-                                                        userId,
-                                                        appliancesData['watts']
-                                                            .toString()),
-                                                    builder:
-                                                        (context, snapshot) {
-                                                      if (snapshot
-                                                              .connectionState ==
-                                                          ConnectionState
-                                                              .waiting) {
-                                                        return CircularProgressIndicator();
-                                                      } else {
-                                                        if (snapshot.hasError) {
-                                                          return Text('Error');
-                                                        } else {
-                                                          double? kWh = double
-                                                              .tryParse(snapshot
-                                                                      .data ??
-                                                                  '0.0');
-                                                          print('kwh ${kWh}');
-                                                          total += kWh!;
-                                                          totalKWh.add(total);
-                                                          print(totalKWh);
-                                                          return Text(kWh!
-                                                              .toStringAsFixed(
-                                                                  2));
-                                                        }
-                                                      }
-                                                    },
+                                                  '${index + 1}',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
                                                   ),
-                                                ),
+                                                )),
+                                                DataCell(Text(
+                                                  '${appliancesData['type']}',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                  ),
+                                                )),
+                                                DataCell(Text(
+                                                  '${appliancesData['brand']}',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                  ),
+                                                )),
+                                                DataCell(Text(
+                                                  '${double.parse(watts).toStringAsFixed(2)}',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                  ),
+                                                )),
+                                                DataCell(Text(
+                                                    '${perKwh.toStringAsFixed(2)}',
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                    ))),
                                               ]);
                                             },
-                                          )),
-                                      FutureBuilder<double>(
-                                        future: getOverallTotalKWh(
-                                            applianceIds, watts),
-                                        builder: (context, snapshot) {
-                                          if (snapshot.connectionState ==
-                                              ConnectionState.waiting) {
-                                            return CircularProgressIndicator();
-                                          } else {
-                                            if (snapshot.hasError) {
-                                              return Text(
-                                                  'Error calculating total kWh');
-                                            } else {
-                                              double? overallTotalKWh =
-                                                  snapshot.data;
-
-                                              return Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.end,
-                                                children: [
-                                                  Text('Overall Total kWh'),
-                                                  Text('${totalKWh.length}')
-                                                ],
-                                              );
-                                            }
-                                          }
-                                        },
-                                      ),
-                                    ],
-                                  )),
+                                          ),
+                                        ),
+                                        Divider(),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: [
+                                            Container(
+                                              child: Text(
+                                                'Total per kWh: ${totalOvertimePay.toStringAsFixed(2)}',
+                                                style: TextStyle(
+                                                    fontSize: 15,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.amber[50]),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -168,49 +274,13 @@ class _BillingPageState extends State<BillingPage> {
     );
   }
 
-  Future<String> getTotalWatts(String id, String watts) async {
-    double totalkWh = 0.0;
-    // Get documents from 'Activity' collection for the given appliance id
-    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-        .collection('Activity')
-        .where('id', isEqualTo: id)
-        .get();
-
-    int totalHours = 0;
-    querySnapshot.docs.forEach((doc) {
-      // Parse 'offTime' and 'onTime' strings into DateTime objects
-      DateTime offTime = DateTime.parse(doc['offTime']);
-      DateTime onTime = DateTime.parse(doc['onTime']);
-
-      // Calculate the difference in hours
-      int hours = offTime.difference(onTime).inHours;
-
-      // Add the hours to the total
-      totalHours += hours;
-    });
-
-    // Convert total hours to kWh (assuming 12.05 kWh = 1 hour for simplicity)
-    double kWh = ((totalHours.toDouble() * double.parse(watts)) / 1000) * 12.05;
-    return kWh.toStringAsFixed(2); // Return kWh as a formatted string
+  double calculateTotalHours(Timestamp start, Timestamp end) {
+    DateTime startTime = start.toDate();
+    DateTime endTime = end.toDate();
+    return endTime.difference(startTime).inHours.toDouble();
   }
 
-  Future<double> getOverallTotalKWh(
-      List<String> applianceIds, String watts) async {
-    double overallTotalKWh = 0.0;
-
-    // Calculate total kWh for each appliance
-    List<double> individualKWh = await Future.wait(applianceIds.map((id) async {
-      String kWhString = await getTotalWatts(id, watts);
-      print(kWhString);
-
-      return double.parse(kWhString);
-    }));
-
-    // Sum up individual kWh values to get overall total kWh
-
-    print(totalKWh);
-    print(" indi -- ${individualKWh}");
-
-    return individualKWh[0];
+  TextStyle textStyle() {
+    return TextStyle(color: Colors.white, fontWeight: FontWeight.bold);
   }
 }
