@@ -165,9 +165,48 @@ class _AppliancesPageState extends State<AppliancesPage> {
                                                   style: TextStyle(
                                                       fontSize: 10,
                                                       color: Colors.white),
-                                                ))
+                                                )),
+                                            IconButton(
+                                              onPressed: () {
+                                                showDialog(
+                                                  context: context,
+                                                  builder:
+                                                      (BuildContext context) {
+                                                    return AlertDialog(
+                                                      title: Text(
+                                                          'Confirm Delete'),
+                                                      content: Text(
+                                                          'Are you sure you want to delete this item?'),
+                                                      actions: <Widget>[
+                                                        TextButton(
+                                                          onPressed: () {
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop();
+                                                          },
+                                                          child: Text('Cancel'),
+                                                        ),
+                                                        TextButton(
+                                                          onPressed: () {
+                                                            deleteData(userId);
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop();
+                                                          },
+                                                          child: Text('Delete'),
+                                                        ),
+                                                      ],
+                                                    );
+                                                  },
+                                                );
+                                              },
+                                              icon: Icon(
+                                                Icons.delete,
+                                                color: Colors.red,
+                                              ),
+                                            ),
                                           ],
-                                        )
+                                        ),
                                       ],
                                     ),
                                   );
@@ -184,6 +223,20 @@ class _AppliancesPageState extends State<AppliancesPage> {
         ),
       ),
     );
+  }
+
+  void deleteData(String userId) {
+    FirebaseFirestore.instance
+        .collection('Appliances')
+        .doc(userId)
+        .delete()
+        .then((value) {
+      // Document successfully deleted
+      print('Document $userId successfully deleted');
+    }).catchError((error) {
+      // Error deleting document
+      print('Error deleting document: $error');
+    });
   }
 
   Future<dynamic> viewActivity(String userId) {
