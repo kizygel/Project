@@ -248,15 +248,17 @@ class _AppliancesPageState extends State<AppliancesPage> {
                                             appliancesData['onTime'];
                                         DateTime dateTime = timestamp.toDate();
                                         String formattedDate =
-                                            DateFormat('yyyy-MM-dd')
+                                            DateFormat('yyyy-MM-dd HH:mm')
                                                 .format(dateTime);
 
                                         Timestamp timestamp2 =
                                             appliancesData['offTime'];
-                                        DateTime dateTime2 = timestamp.toDate();
+                                        DateTime dateTime2 =
+                                            timestamp2.toDate();
                                         String formattedDate2 =
-                                            DateFormat('yyyy-MM-dd')
-                                                .format(dateTime);
+                                            DateFormat('yyyy-MM-dd HH:mm')
+                                                .format(dateTime2);
+
                                         return Container(
                                           width: double.infinity,
                                           margin:
@@ -269,7 +271,9 @@ class _AppliancesPageState extends State<AppliancesPage> {
                                             mainAxisAlignment:
                                                 MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Column(
+                                              Flexible(
+                                                // Wrap in Flexible
+                                                child: Column(
                                                   mainAxisAlignment:
                                                       MainAxisAlignment.start,
                                                   crossAxisAlignment:
@@ -278,18 +282,26 @@ class _AppliancesPageState extends State<AppliancesPage> {
                                                     Text(
                                                       'ON - ${formattedDate} ${appliancesData['addedBy']}',
                                                       style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          fontSize: 12),
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 12,
+                                                        overflow: TextOverflow
+                                                            .ellipsis, // Handle overflow
+                                                      ),
                                                     ),
                                                     Text(
                                                       'OFF - ${formattedDate2} ${appliancesData['addedBy']}',
                                                       style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          fontSize: 12),
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 12,
+                                                        overflow: TextOverflow
+                                                            .ellipsis, // Handle overflow
+                                                      ),
                                                     ),
-                                                  ]),
+                                                  ],
+                                                ),
+                                              ),
                                             ],
                                           ),
                                         );
