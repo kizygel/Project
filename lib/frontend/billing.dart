@@ -29,6 +29,13 @@ class _BillingPageState extends State<BillingPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: Text(
+                      'Billing',
+                      style: TextStyle(fontSize: 15, color: Colors.white),
+                    ),
+                  ),
                   Row(
                     children: [
                       Padding(
