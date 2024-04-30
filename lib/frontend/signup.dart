@@ -61,7 +61,7 @@ class _SignUpState extends State<SignUp> {
                 ),
                 Center(
                   child: Text(
-                    'QuantomAware',
+                    'QuantumAware',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 25,

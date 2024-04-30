@@ -50,20 +50,23 @@ class _NotificationPageState extends State<NotificationPage> {
                           List<DocumentSnapshot> dataDocs = snapshot.data!.docs;
                           // Filter data by date range if selected
 
-                          List<String> applianceIds =
-                              dataDocs.map((doc) => doc.id).toList();
-
                           List<DocumentSnapshot> filteredDocs =
                               dataDocs.where((document) {
                             Map<String, dynamic> data =
                                 document.data() as Map<String, dynamic>;
+                            Timestamp onTime = data['onTime'];
+                            Timestamp offTime = data['offTime'];
+                            DateTime now = DateTime.now();
 
-                            DateTime? timeIn =
-                                (data['onTime'] as Timestamp?)?.toDate();
+                            // Check if the current date is within the range of onTime and offTime
+                            bool isWithinRange = now.isAfter(onTime.toDate()) &&
+                                now.isBefore(offTime.toDate());
 
-                            bool isWattsLessThan100 = data['watts'] > 100;
+                            // Check if watts exceed 300
+                            bool isWattsExceed300 = data['watts'] > 300;
 
-                            return isWattsLessThan100;
+                            // Return true only if both conditions are met
+                            return isWattsExceed300;
                           }).toList();
 
                           // Calculate total overtime pay for the current user
@@ -130,8 +133,30 @@ class _NotificationPageState extends State<NotificationPage> {
                                         width: 8,
                                       ),
                                       Flexible(
-                                        child: Text(
-                                            "We've noticed a significant increase in your energy consumption, likely due to the ${appliancesData['type']}. Taking immediate action is crucial to manage escalating utility expenses."),
+                                        child: Text.rich(
+                                          TextSpan(
+                                            text:
+                                                "We've noticed a significant increase in your energy consumption, likely due to the ",
+                                            style:
+                                                TextStyle(color: Colors.black),
+                                            children: <TextSpan>[
+                                              TextSpan(
+                                                text:
+                                                    "${appliancesData['type']}",
+                                                style: TextStyle(
+                                                    color: Colors.red,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              TextSpan(
+                                                text:
+                                                    ". Taking immediate action is crucial to manage escalating utility expenses.",
+                                                style: TextStyle(
+                                                    color: Colors.black),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       )
                                     ],
                                   ),

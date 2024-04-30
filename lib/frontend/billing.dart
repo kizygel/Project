@@ -139,14 +139,22 @@ class _BillingPageState extends State<BillingPage> {
 
                           return Align(
                             alignment: Alignment.topLeft,
-                            child: SizedBox(
-                              width: 500,
+                            child: Container(
+                              width: double.infinity,
+                              margin: EdgeInsets.all(10),
+                              padding: EdgeInsets.only(left: 10),
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(15)),
                               child: FittedBox(
-                                fit: BoxFit.scaleDown,
+                                fit: BoxFit.fill,
                                 child: SingleChildScrollView(
                                   scrollDirection: Axis.vertical,
-                                  child: Flexible(
+                                  child: Expanded(
                                     child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
                                       children: [
                                         DataTable(
                                           columns: [
@@ -210,31 +218,31 @@ class _BillingPageState extends State<BillingPage> {
                                                 DataCell(Text(
                                                   '${index + 1}',
                                                   style: TextStyle(
-                                                    color: Colors.white,
+                                                    color: Colors.black,
                                                   ),
                                                 )),
                                                 DataCell(Text(
                                                   '${appliancesData['type']}',
                                                   style: TextStyle(
-                                                    color: Colors.white,
+                                                    color: Colors.black,
                                                   ),
                                                 )),
                                                 DataCell(Text(
                                                   '${appliancesData['brand']}',
                                                   style: TextStyle(
-                                                    color: Colors.white,
+                                                    color: Colors.black,
                                                   ),
                                                 )),
                                                 DataCell(Text(
                                                   '${double.parse(watts).toStringAsFixed(2)}',
                                                   style: TextStyle(
-                                                    color: Colors.white,
+                                                    color: Colors.black,
                                                   ),
                                                 )),
                                                 DataCell(Text(
                                                     '${perKwh.toStringAsFixed(2)}',
                                                     style: TextStyle(
-                                                      color: Colors.white,
+                                                      color: Colors.black,
                                                     ))),
                                               ]);
                                             },
@@ -246,12 +254,13 @@ class _BillingPageState extends State<BillingPage> {
                                               MainAxisAlignment.end,
                                           children: [
                                             Container(
+                                              padding: EdgeInsets.all(15),
                                               child: Text(
                                                 'Total per kWh: ${totalOvertimePay.toStringAsFixed(2)}',
                                                 style: TextStyle(
                                                     fontSize: 15,
                                                     fontWeight: FontWeight.bold,
-                                                    color: Colors.amber[50]),
+                                                    color: Colors.black),
                                               ),
                                             ),
                                           ],
@@ -281,6 +290,6 @@ class _BillingPageState extends State<BillingPage> {
   }
 
   TextStyle textStyle() {
-    return TextStyle(color: Colors.white, fontWeight: FontWeight.bold);
+    return TextStyle(color: Colors.black, fontWeight: FontWeight.bold);
   }
 }

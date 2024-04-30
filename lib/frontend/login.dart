@@ -54,7 +54,7 @@ class _LoginState extends State<Login> {
                 ),
                 Center(
                   child: Text(
-                    'QuantomAware',
+                    'QuantumAware',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 25,
