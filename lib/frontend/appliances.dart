@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:intl/intl.dart';
@@ -51,7 +52,26 @@ class _AppliancesPageState extends State<AppliancesPage> {
           child: SingleChildScrollView(
             child: Center(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
+                  Container(
+                    margin: EdgeInsets.all(10),
+                    padding: EdgeInsets.all(0),
+                    child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          padding: const EdgeInsets.all(5.0),
+                          minimumSize: const Size(100, 40),
+                          maximumSize: const Size(120, 40),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () {
+                          addThreshold();
+                        },
+                        child: Text('Set Threshold')),
+                  ),
                   StreamBuilder(
                       stream: FirebaseFirestore.instance
                           .collection('Appliances')
@@ -239,6 +259,176 @@ class _AppliancesPageState extends State<AppliancesPage> {
     });
   }
 
+  Future<dynamic> addThreshold() {
+    final TextEditingController wattsController = TextEditingController();
+    final TextEditingController hoursController = TextEditingController();
+
+    return showDialog(
+      context: context,
+      builder: (BuildContext Context) {
+        return SizedBox(
+          child: FutureBuilder<DocumentSnapshot>(
+            future: FirebaseFirestore.instance
+                .collection('Threshold')
+                .doc('Qs6QCJE6i6nJnIsDHrmE') // Replace with your document ID
+                .get(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Text("Loading"); // or a loading indicator
+              }
+              if (snapshot.hasError) {
+                return Text('Error: ${snapshot.error}');
+              }
+              if (!snapshot.hasData || !snapshot.data!.exists) {
+                return Text('Document does not exist on the database');
+              }
+
+              // Set the initial values in the text fields
+              wattsController.text = snapshot.data!['watts'].toString();
+              hoursController.text = snapshot.data!['hours'].toString();
+
+              return AlertDialog(
+                surfaceTintColor: Colors.white,
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Set Threshold'),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                content: Container(
+                  width: 250,
+                  margin: const EdgeInsets.all(0),
+                  padding: const EdgeInsets.all(0),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Watts',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(
+                          height: 5,
+                        ),
+                        Container(
+                          padding: const EdgeInsets.only(left: 15),
+                          height: 50,
+                          decoration: boxDecoration(),
+                          child: TextField(
+                            controller: wattsController,
+                            decoration: fieldDecoration('type'),
+                            keyboardType:
+                                TextInputType.numberWithOptions(decimal: false),
+                            inputFormatters: <TextInputFormatter>[
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                          ),
+                        ),
+                        Text(
+                          'Hours',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(
+                          height: 5,
+                        ),
+                        Container(
+                          padding: const EdgeInsets.only(left: 15),
+                          height: 50,
+                          decoration: boxDecoration(),
+                          child: TextField(
+                            controller: hoursController,
+                            decoration: fieldDecoration('type'),
+                            keyboardType:
+                                TextInputType.numberWithOptions(decimal: false),
+                            inputFormatters: <TextInputFormatter>[
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                          ),
+                        ),
+                        Center(
+                          child: Container(
+                            margin: EdgeInsets.all(10),
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                padding: const EdgeInsets.all(5.0),
+                                minimumSize: const Size(100, 40),
+                                maximumSize: const Size(120, 40),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              onPressed: () {
+                                // Get the values from the text fields
+                                int watts =
+                                    int.tryParse(wattsController.text) ?? 0;
+                                int hours =
+                                    int.tryParse(hoursController.text) ?? 0;
+
+                                // Update the data in Firebase
+                                FirebaseFirestore.instance
+                                    .collection('Threshold')
+                                    .doc(
+                                        'Qs6QCJE6i6nJnIsDHrmE') // Replace with your document ID
+                                    .update({
+                                  'watts': watts,
+                                  'hours': hours,
+                                }).then((_) {
+                                  // Close the dialog
+                                  Navigator.of(context).pop();
+                                  // Show success dialog
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        title: Text('Success'),
+                                        content:
+                                            Text('Threshold successfully set'),
+                                        actions: <Widget>[
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                            },
+                                            child: Text('OK'),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                }).catchError((error) {
+                                  // An error occurred while updating data
+                                  print('Error updating document: $error');
+                                });
+                              },
+                              child: Text(
+                                'Set',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   Future<dynamic> viewActivity(String userId) {
     return showDialog(
         context: context,
@@ -271,6 +461,7 @@ class _AppliancesPageState extends State<AppliancesPage> {
                     height: 250,
                     child: Column(
                       children: [
+                        IconButton(onPressed: () {}, icon: Icon(Icons.add)),
                         StreamBuilder(
                             stream: FirebaseFirestore.instance
                                 .collection('Activity')

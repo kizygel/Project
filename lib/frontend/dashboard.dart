@@ -12,6 +12,7 @@ class Dashboard extends StatefulWidget {
 
 class _DashboardState extends State<Dashboard> {
   late String _userName = 'Guest';
+
   List<_ChartData> _chartData = [];
   late List<_ChartData> data = [];
   List<_ChartData2> _chartData2 = [];
