@@ -461,7 +461,6 @@ class _AppliancesPageState extends State<AppliancesPage> {
                     height: 250,
                     child: Column(
                       children: [
-                        IconButton(onPressed: () {}, icon: Icon(Icons.add)),
                         StreamBuilder(
                             stream: FirebaseFirestore.instance
                                 .collection('Activity')
