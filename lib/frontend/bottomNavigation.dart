@@ -282,7 +282,9 @@ class _BottomNavigationBarExampleState
                                 )),
                             ElevatedButton(
                                 style: style(Colors.red),
-                                onPressed: () {},
+                                onPressed: () {
+                                  Navigator.pop(context, false);
+                                },
                                 child: Text(
                                   'CLOSE',
                                   style: TextStyle(color: Colors.white),
